@@ -10,17 +10,22 @@ public class Evaluator {
 		nextChar();
 		Double x = evalAddSub();
 		if(currentPos < expression.length())
-			throw new RuntimeException("Syntax Error");
+			throw new RuntimeException("SYNTAX ERROR");
 		return x;
 	}
 
-	private void nextChar() {
-		if(++currentPos >= expression.length())
-			ch = '@';
-			//throw new RuntimeException("Syntax Error");
-		else	
-			ch = expression.charAt(currentPos);
+	private void nextChar() {	
+		ch = ++currentPos < expression.length() ? expression.charAt(currentPos): ' ';
 	}
+	
+	private boolean removeOperator(char op) {
+		if(ch == op) {
+			nextChar();
+			return true;
+		}
+		return false;
+	}
+	
 	
 	private Double evalAddSub() {
 		Double x = evalMultDiv();
@@ -45,6 +50,7 @@ public class Evaluator {
 		if(removeOperator('-')) x = -evalFactors();
 		
 		int startPos = currentPos;
+		
 		if(removeOperator('(')) {
 			x = evalAddSub();
 			removeOperator(')');
@@ -52,13 +58,10 @@ public class Evaluator {
 		else if(Character.isDigit(ch)) {
 			while(Character.isDigit(ch) || ch == '.') nextChar();
 			x = Double.parseDouble(expression.substring(startPos,currentPos));
-			if(removeOperator('E')) {
-				x *= Math.pow(10, evalFactors());
-			}
 		}
 		else if(Character.isLetter(ch)) {
 			while(Character.isLetter(ch)) nextChar();
-			 String func = expression.substring(startPos,currentPos);
+			String func = expression.substring(startPos,currentPos);
 			switch(func){
 				case "sin":
 					x = Math.sin(evalFactors());
@@ -73,19 +76,32 @@ public class Evaluator {
 					x = Math.PI;
 				case "e":
 					x = Math.E;
+				case "log":
+					x = Math.log10(evalFactors());
+					break;
+				case "ln":
+					x = Math.log(evalFactors());
+					break;			
 				default:
-					throw new RuntimeException("Unexpected: " + func);
+					throw new RuntimeException("SYNTAX ERROR - Unexpected: " + func);
 			}
 		}
-		return x;
-	}
-	
-	private boolean removeOperator(char op) {
-		if(ch == op) {
-			nextChar();
-			return true;
+		else {
+			switch(ch) {
+				case '√':
+					removeOperator('√');
+					x = Math.sqrt(evalFactors());
+					break;
+				default:
+					throw new RuntimeException("SYNTAX ERROR - Unexpected: " + ch);
+			}
 		}
-		return false;
+		
+		if(removeOperator('E')) x *= Math.pow(10, evalFactors());
+		if(removeOperator('²')) x = Math.pow(x, 2);
+		if(removeOperator('^')) x = Math.pow(x, evalFactors());
+		
+		return x;
 	}
 	
 	private void resetValues(String str) {
