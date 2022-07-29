@@ -1,4 +1,4 @@
-import javax.management.RuntimeErrorException;
+
 
 public class Evaluator {
 	int currentPos = -1;
@@ -9,15 +9,17 @@ public class Evaluator {
 		resetValues(exp);		
 		nextChar();
 		Double x = evalAddSub();
-		if(currentPos >= expression.length())
+		if(currentPos < expression.length())
 			throw new RuntimeException("Syntax Error");
 		return x;
 	}
 
 	private void nextChar() {
-		if(++currentPos < expression.length())
-			throw new RuntimeException("Syntax Error");
-		ch = expression.charAt(currentPos);
+		if(++currentPos >= expression.length())
+			ch = '@';
+			//throw new RuntimeException("Syntax Error");
+		else	
+			ch = expression.charAt(currentPos);
 	}
 	
 	private Double evalAddSub() {
@@ -50,6 +52,9 @@ public class Evaluator {
 		else if(Character.isDigit(ch)) {
 			while(Character.isDigit(ch) || ch == '.') nextChar();
 			x = Double.parseDouble(expression.substring(startPos,currentPos));
+			if(removeOperator('E')) {
+				x *= Math.pow(10, evalFactors());
+			}
 		}
 		else if(Character.isLetter(ch)) {
 			while(Character.isLetter(ch)) nextChar();
